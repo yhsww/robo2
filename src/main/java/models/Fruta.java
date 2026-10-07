@@ -1,0 +1,14 @@
+package models;
+
+public class Fruta {
+    private int posX;
+    private int posY;
+
+    public Fruta() { this(0, 0); }
+    public Fruta(int posX, int posY) { this.posX = posX; this.posY = posY; }
+
+    public int getPosX() { return posX; }
+    public int getPosY() { return posY; }
+    public void setPosX(int posX) { this.posX = posX; }
+    public void setPosY(int posY) { this.posY = posY; }
+}
