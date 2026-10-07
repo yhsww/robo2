@@ -141,17 +141,41 @@ public class InterfaceFruitBot extends Application {
     }
 
     private void adicionarRobo() {
-        if (modoAtual == 0) { mensagem.setText("Clique em Novo Jogo primeiro."); return; }
+        if (modoAtual == 0) {
+            mensagem.setText("Clique em Novo Jogo primeiro.");
+            return;
+        }
+
         int limite = modoAtual == 1 ? 1 : 2;
-        if (robos.size() >= limite) { mensagem.setText("Quantidade máxima de robôs atingida."); return; }
-        int px = x.getValue(), py = y.getValue();
+
+        if (robos.size() >= limite) {
+            mensagem.setText("Quantidade máxima de robôs atingida.");
+            return;
+        }
+
+        int px = x.getValue();
+        int py = y.getValue();
         Cor c = cor.getValue();
-        if (ocupada(px, py)) { mensagem.setText("A posição já está ocupada."); return; }
-        for (Robo r : robos) if (r.getCor() == c) { mensagem.setText("Escolha outra cor."); return; }
+
+        if (ocupada(px, py)) {
+            mensagem.setText("A posição já está ocupada.");
+            return;
+        }
+
+        for (Robo r : robos){
+            if (r.getCor() == c) {
+                mensagem.setText("Escolha outra cor.");
+                return;
+            }
+        }
 
         Robo robo;
-        if ((modoAtual == 3 || modoAtual == 4) && robos.size() == 1) robo = new RoboInteligente(c);
-        else robo = new Robo(c);
+        if ((modoAtual == 3 || modoAtual == 4) && robos.size() == 1){
+            mensagem.setText("Defina o robô inteligente: "); robo = new RoboInteligente(c);
+        }else{
+            mensagem.setText("Defina o robô inteligente: "); robo = new Robo(c);
+        }
+
         robo.setPosX(px);
         robo.setPosY(py);
         robos.add(robo);
@@ -170,11 +194,22 @@ public class InterfaceFruitBot extends Application {
     }
 
     private void adicionarObstaculo() {
-        if (modoAtual != 4) { mensagem.setText("Obstáculos só podem ser usados no modo 4."); return; }
-        int px = x.getValue(), py = y.getValue();
-        if (ocupada(px, py)) { mensagem.setText("A posição já está ocupada."); return; }
+        if (modoAtual != 4) {
+            mensagem.setText("Obstáculos só podem ser usados no modo 4.");
+            return;
+        }
+
+        int px = x.getValue();
+        int py = y.getValue();
+
+        if (ocupada(px, py)) {
+            mensagem.setText("A posição já está ocupada.");
+            return;
+        }
+
         Obstaculo o = "Bomba".equals(tipoObstaculo.getValue()) ? new Bomba(obstaculos.size() + 1) : new Rocha(obstaculos.size() + 1);
-        o.setPosX(px); o.setPosY(py);
+        o.setPosX(px);
+        o.setPosY(py);
         obstaculos.add(o);
         mensagem.setText((o instanceof Bomba ? "Bomba" : "Rocha") + " adicionada em [" + px + "," + py + "].");
         atualizar();
@@ -188,7 +223,7 @@ public class InterfaceFruitBot extends Application {
     }
 
     private void moverManual(int direcao) {
-        if (modoAtual != 1) { mensagem.setText("As setas são usadas no modo 1."); return; }
+        if (modoAtual != 1) { mensagem.setText("As setas são usadas apenas no modo 1."); return; }
         if (!pronto() || fim) return;
         mover(robos.get(0), direcao);
     }
@@ -204,7 +239,7 @@ public class InterfaceFruitBot extends Application {
         automatico = new Timeline(new KeyFrame(Duration.millis(600), e -> passoAutomatico()));
         automatico.setCycleCount(Timeline.INDEFINITE);
         automatico.play();
-        botao.setText("Parar automático");
+        botao.setText("Mover robôs randomicamente");
     }
 
     private void pararAutomatico() {
@@ -212,21 +247,31 @@ public class InterfaceFruitBot extends Application {
     }
 
     private void passoAutomatico() {
-        if (fim) { pararAutomatico(); return; }
+
+        if (fim) {
+            pararAutomatico();
+            return;
+        }
+
         if (modoAtual == 2) {
             mover(robos.get(roboDaVez), ThreadLocalRandom.current().nextInt(1, 5));
             roboDaVez = (roboDaVez + 1) % 2;
         } else {
             int idx = proximoRobo();
-            if (idx == -1) { finalizar("Fim: não há robôs ativos."); return; }
+            if (idx == -1) {
+                finalizar("Fim: não há robôs ativos.");
+                return;
+            }
+
             roboDaVez = idx;
             Robo robo = robos.get(idx);
+
             try {
                 if (robo instanceof RoboInteligente inteligente) inteligente.mover();
                 else robo.moverRandomico();
                 verificarPosicao(robo);
             } catch (MovimentoInvalidoException e) {
-                mensagem.setText("Movimento inválido. O robô permanece no lugar.");
+                mensagem.setText("Movimento inválido. O robô permanece no mesmo lugar.");
             }
             roboDaVez = (roboDaVez + 1) % 2;
             atualizar();
@@ -264,10 +309,10 @@ public class InterfaceFruitBot extends Application {
                     o.bater(robo);
                     if (o instanceof Bomba) {
                         obstaculos.remove(i);
-                        finalizar("O robô " + robo.getCor().getTipoCor() + " EXPLODIU! A partida terminou imediatamente.");
+                        finalizar("BOOM! O robô " + robo.getCor().getTipoCor() + " EXPLODIU! A partida termina imediatamente.");
                         return;
                     } else {
-                        mensagem.setText("O robô bateu na rocha e voltou.");
+                        mensagem.setText("O robô bateu na rocha e voltou para a posição anterior.");
                     }
                     break;
                 }
@@ -331,7 +376,7 @@ public class InterfaceFruitBot extends Application {
                 casa.getChildren().add(pos);
 
                 if (fruta != null && fruta.getPosX() == linha && fruta.getPosY() == coluna) {
-                    Label f = new Label("FRUTA");
+                    Label f = new Label("Fruta");
                     f.setFont(Font.font(18));
                     casa.getChildren().add(f);
                 }
@@ -347,8 +392,18 @@ public class InterfaceFruitBot extends Application {
                 for (Robo r : robos) {
                     if (r.getPosX() == linha && r.getPosY() == coluna && !r.getExplodiu()) {
                         Circle c = new Circle(20, corJavaFX(r.getCor()));
-                        Label nome = new Label("R" + (robos.indexOf(r) + 1));
-                        nome.setTextFill(Color.WHITE);
+
+                        Label nome = null;
+
+                        if(r instanceof RoboInteligente ){
+                             nome = new Label("Bot inteligente " + (robos.indexOf(r) + 1));
+
+                        }else{
+
+                            nome = new Label("Bot normal " + (robos.indexOf(r) + 1));
+                        }
+
+                        nome.setTextFill(Color.GRAY);
                         VBox robo = new VBox(2, c, nome);
                         robo.setAlignment(Pos.CENTER);
                         casa.getChildren().add(robo);
